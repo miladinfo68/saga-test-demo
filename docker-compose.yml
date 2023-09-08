@@ -1,0 +1,95 @@
+version: '3.4'
+
+services:
+  messagebroker:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - dev
+
+  appdb:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin1234
+      - POSTGRES_MULTIPLE_DATABASES=OrderDb,StockDb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - dev
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@aspnetrun.com
+      - PGADMIN_DEFAULT_PASSWORD=admin1234
+    restart: always
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data://root/.pgadmin
+    networks:
+      - dev
+
+  # order.api:
+  #   image: ${DOCKER_REGISTRY-}orderapi
+  #   build:
+  #     context: .
+  #     dockerfile: Services/Order/Order.API/Dockerfile
+  #   ports:
+  #     - "8001:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - "ConnectionStrings:OrderDb=Server=appdb;Port=5432;Database=OrderDb;User Id=admin;Password=admin1234;"
+  #   depends_on:
+  #     - appdb
+  #     - messagebroker
+  #   networks:
+  #     - dev
+
+  # stock.api:
+  #   image: ${DOCKER_REGISTRY-}stockapi
+  #   build:
+  #     context: .
+  #     dockerfile: Services/Stock/Stock.API/Dockerfile
+  #   ports:
+  #     - "8002:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - "ConnectionStrings:StockDb=Server=appdb;Port=5432;Database=StockDb;User Id=admin;Password=admin1234;"
+  #   depends_on:
+  #     - appdb
+  #     - messagebroker
+  #   networks:
+  #     - dev
+
+  # payment.api:
+  #   image: ${DOCKER_REGISTRY-}paymentapi
+  #   build:
+  #     context: .
+  #     dockerfile: Services/Payment/Payment.API/Dockerfile
+  #   ports:
+  #     - "8003:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   depends_on:
+  #     - messagebroker
+  #   networks:
+  #     - dev
+
+networks:
+  dev:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
